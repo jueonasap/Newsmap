@@ -1,7 +1,29 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(320);
+  const isResizing = useRef(false);
+
+  const startResize = () => {
+    isResizing.current = true;
+    document.addEventListener("mousemove", resize);
+    document.addEventListener("mouseup", stopResize);
+  };
+
+  const resize = (e) => {
+    if (!isResizing.current) return;
+    const newWidth = window.innerWidth - e.clientX;
+    if (newWidth >= 240 && newWidth <= 600) {
+      setSidebarWidth(newWidth);
+    }
+  };
+
+  const stopResize = () => {
+    isResizing.current = false;
+    document.removeEventListener("mousemove", resize);
+    document.removeEventListener("mouseup", stopResize);
+  };
 
   return (
     <div style={styles.app}>
@@ -12,14 +34,22 @@ function App() {
 
       {/* Main */}
       <div style={styles.main}>
-        {/* Map area */}
+        {/* Map */}
         <div style={styles.map}>
-          <p style={{ color: "#888" }}>Map area (지도 들어갈 자리)</p>
+          <p style={{ color: "#888" }}>Map area (지도 자리)</p>
         </div>
 
         {/* Sidebar */}
         {sidebarOpen && (
-          <div style={styles.sidebar}>
+          <div
+            style={{
+              ...styles.sidebar,
+              width: sidebarWidth,
+            }}
+          >
+            {/* Resize handle */}
+            <div style={styles.resizer} onMouseDown={startResize} />
+
             <div style={styles.sidebarHeader}>
               <h3 style={{ margin: 0 }}>지역 뉴스</h3>
               <button
@@ -36,14 +66,14 @@ function App() {
               <p>🇯🇵 Japan</p>
               <p>🇫🇷 France</p>
               <p style={{ color: "#999" }}>
-                (나중에 지역 누르면 뉴스 뜨게 할 거야)
+                드래그해서 창 크기 조절 가능
               </p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Sidebar open button */}
+      {/* Open button */}
       {!sidebarOpen && (
         <button
           style={styles.openBtn}
@@ -84,11 +114,20 @@ const styles = {
     justifyContent: "center",
   },
   sidebar: {
-    width: "320px",
     background: "white",
     borderLeft: "1px solid #ddd",
     display: "flex",
     flexDirection: "column",
+    position: "relative",
+  },
+  resizer: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: "6px",
+    height: "100%",
+    cursor: "col-resize",
+    background: "#e5e5e5",
   },
   sidebarHeader: {
     padding: "12px",
@@ -117,4 +156,4 @@ const styles = {
   },
 };
 
-export default App;=
+export default App;
