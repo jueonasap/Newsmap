@@ -20,16 +20,22 @@ const NEWS_DATA = {
       truth: 45,
     },
   ],
-  USA: [
-    {
-      id: 3,
-      title: "US tech stocks surge amid AI boom",
-      summary:
-        "AI-related companies lead the stock market rally, raising concerns about a potential bubble.",
-      press: "New York Herald",
-      truth: 63,
-    },
-  ],
+};
+
+/* 신문사 분석 데이터 (가짜) */
+const PRESS_DATA = {
+  "Korea Daily": {
+    truth: 78,
+    bias: "중도",
+    description:
+      "최근 수년간의 기사와 외부 팩트체크 데이터를 종합해 산출되었습니다.",
+  },
+  "Seoul Times": {
+    truth: 52,
+    bias: "진보",
+    description:
+      "정치·사회 이슈에서 특정 관점이 자주 나타납니다.",
+  },
 };
 
 function App() {
@@ -38,6 +44,7 @@ function App() {
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [showFact, setShowFact] = useState(false);
+  const [selectedPress, setSelectedPress] = useState(null);
 
   const isResizing = useRef(false);
 
@@ -50,9 +57,7 @@ function App() {
   const resize = (e) => {
     if (!isResizing.current) return;
     const newWidth = window.innerWidth - e.clientX;
-    if (newWidth >= 260 && newWidth <= 600) {
-      setSidebarWidth(newWidth);
-    }
+    if (newWidth >= 260 && newWidth <= 600) setSidebarWidth(newWidth);
   };
 
   const stopResize = () => {
@@ -64,6 +69,7 @@ function App() {
   const handleRegionClick = (region) => {
     setSelectedRegion(region);
     setSelectedArticle(null);
+    setSelectedPress(null);
     setShowFact(false);
     setSidebarOpen(true);
   };
@@ -77,15 +83,12 @@ function App() {
       <div style={styles.main}>
         {/* Map */}
         <div style={styles.map}>
-          {Object.keys(NEWS_DATA).map((region) => (
-            <button
-              key={region}
-              style={styles.regionBtn}
-              onClick={() => handleRegionClick(region)}
-            >
-              {region}
-            </button>
-          ))}
+          <button
+            style={styles.regionBtn}
+            onClick={() => handleRegionClick("Korea")}
+          >
+            Korea
+          </button>
         </div>
 
         {/* Sidebar */}
@@ -106,6 +109,7 @@ function App() {
                     onClick={() => {
                       setSelectedArticle(news);
                       setShowFact(false);
+                      setSelectedPress(null);
                     }}
                   >
                     {news.title}
@@ -119,7 +123,15 @@ function App() {
         {selectedArticle && (
           <div style={styles.article}>
             <h2>{selectedArticle.title}</h2>
-            <p style={{ color: "#666" }}>📰 {selectedArticle.press}</p>
+
+            {/* 신문사 클릭 */}
+            <p
+              style={styles.pressLink}
+              onClick={() => setSelectedPress(selectedArticle.press)}
+            >
+              📰 {selectedArticle.press}
+            </p>
+
             <p>{selectedArticle.summary}</p>
 
             <button
@@ -133,11 +145,25 @@ function App() {
               <div style={styles.factBox}>
                 <SemiGauge value={selectedArticle.truth} />
                 <p style={{ marginTop: 8 }}>
-                  이 수치는 <b>다른 기사·아티클을 교차 분석</b>해
-                  산출되었습니다.
+                  다른 기사·아티클을 교차 분석해 산출된 수치입니다.
                 </p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Press Analysis */}
+        {selectedPress && (
+          <div style={styles.pressPanel}>
+            <h3>{selectedPress} 분석</h3>
+            <SemiGauge value={PRESS_DATA[selectedPress].truth} />
+            <p>
+              <b>성향:</b> {PRESS_DATA[selectedPress].bias}
+            </p>
+            <p style={{ fontSize: 14, color: "#555" }}>
+              {PRESS_DATA[selectedPress].description}
+            </p>
+            <button onClick={() => setSelectedPress(null)}>닫기</button>
           </div>
         )}
       </div>
@@ -148,7 +174,7 @@ function App() {
 /* 반원 게이지 */
 function SemiGauge({ value }) {
   return (
-    <div style={styles.gaugeWrap}>
+    <div style={{ textAlign: "center" }}>
       <div style={styles.gaugeBg}>
         <div
           style={{
@@ -157,11 +183,9 @@ function SemiGauge({ value }) {
           }}
         />
       </div>
-      <div style={styles.gaugeText}>
-        <b>{value}%</b> 진실
-        <br />
-        <span style={{ color: "#c00" }}>{100 - value}% 거짓</span>
-      </div>
+      <p>
+        <b>{value}%</b> 진실 / {100 - value}% 거짓
+      </p>
     </div>
   );
 }
@@ -181,7 +205,6 @@ const styles = {
     flex: 1,
     background: "#f2f2f2",
     display: "flex",
-    gap: 10,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -214,44 +237,48 @@ const styles = {
     cursor: "pointer",
   },
   article: {
-    width: 380,
+    width: 360,
     padding: 16,
     borderLeft: "1px solid #ddd",
     background: "#fafafa",
   },
-  factBtn: {
-    marginTop: 12,
-    padding: 10,
-    width: "100%",
+  pressLink: {
+    color: "#0066cc",
     cursor: "pointer",
+    textDecoration: "underline",
   },
+  factBtn: { marginTop: 12, padding: 10, width: "100%" },
   factBox: {
     marginTop: 16,
     padding: 12,
     border: "1px solid #ddd",
     borderRadius: 8,
   },
-  gaugeWrap: { textAlign: "center" },
+  pressPanel: {
+    width: 300,
+    padding: 16,
+    borderLeft: "1px solid #ddd",
+    background: "#fff",
+  },
   gaugeBg: {
-    width: 180,
-    height: 90,
+    width: 160,
+    height: 80,
     overflow: "hidden",
     margin: "0 auto",
     background: "#eee",
-    borderTopLeftRadius: 180,
-    borderTopRightRadius: 180,
+    borderTopLeftRadius: 160,
+    borderTopRightRadius: 160,
     position: "relative",
   },
   gaugeFill: {
-    width: 180,
-    height: 180,
+    width: 160,
+    height: 160,
     background: "#4caf50",
     position: "absolute",
     bottom: 0,
     left: 0,
     transformOrigin: "center bottom",
   },
-  gaugeText: { marginTop: 8 },
 };
 
 export default App;
