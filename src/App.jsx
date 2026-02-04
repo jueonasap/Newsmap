@@ -1,3 +1,4 @@
+import { saveBookmark } from "./utils/bookmark";
 import { useState, useRef } from "react";
 
 /* 가짜 뉴스 데이터 */
